@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { STATUSES, buildWhatsAppLink } from "@/lib/whatsapp";
 
 type Order = Tables<"service_orders">;
@@ -37,6 +38,24 @@ function Dashboard() {
     queryKey: ["orders"],
     queryFn: async () => {
       const { data, error } = await supabase.from("service_orders").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+  const { data: isAdmin = false } = useQuery({
+    queryKey: ["is-admin"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return false;
+      const { data } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+      return !!data;
+    },
+  });
+  const { data: leads = [] } = useQuery({
+    queryKey: ["leads"],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -75,6 +94,12 @@ function Dashboard() {
           ))}
         </div>
 
+        <Tabs defaultValue="os">
+          <TabsList>
+            <TabsTrigger value="os">Ordens de Serviço</TabsTrigger>
+            {isAdmin && <TabsTrigger value="leads">Leads</TabsTrigger>}
+          </TabsList>
+          <TabsContent value="os">
         <Card><CardContent className="p-0">
           <div className="flex items-center justify-between p-6">
             <h2 className="text-xl font-semibold">Ordens de Serviço</h2>
@@ -114,6 +139,33 @@ function Dashboard() {
             </TableBody>
           </Table>
         </CardContent></Card>
+          </TabsContent>
+          {isAdmin && (
+            <TabsContent value="leads">
+              <Card><CardContent className="p-0">
+                <div className="p-6"><h2 className="text-xl font-semibold">Leads</h2></div>
+                <Table>
+                  <TableHeader><TableRow>
+                    <TableHead>Nome</TableHead><TableHead>Telefone</TableHead><TableHead>E-mail</TableHead><TableHead>Data</TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {leads.length === 0 && (
+                      <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">Nenhum lead ainda.</TableCell></TableRow>
+                    )}
+                    {leads.map((l) => (
+                      <TableRow key={l.id}>
+                        <TableCell className="font-medium">{l.name}</TableCell>
+                        <TableCell>{l.phone}</TableCell>
+                        <TableCell>{l.email}</TableCell>
+                        <TableCell>{new Date(l.created_at).toLocaleString("pt-BR")}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent></Card>
+            </TabsContent>
+          )}
+        </Tabs>
       </main>
       {editing && <OrderDialog order={editing} onClose={() => setEditing(null)} />}
     </div>
