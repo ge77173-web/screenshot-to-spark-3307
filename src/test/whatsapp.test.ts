@@ -11,7 +11,7 @@ describe("whatsapp link", () => {
   it("builds the wa.me link with the status message", () => {
     const url = buildWhatsAppLink({ name: "Ana", phone: "11988887777", device: "Notebook", status: "Aguardando Peça" });
     expect(url.startsWith("https://wa.me/5511988887777?text=")).toBe(true);
-    expect(decodeURIComponent(url.split("text=")[1])).toBe(
+    expect(decodeURIComponent(url.split("text=")[1] ?? "")).toBe(
       "Olá Ana, passando para avisar que o seu Notebook está com o status: Aguardando Peça.",
     );
   });

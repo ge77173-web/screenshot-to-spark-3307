@@ -130,7 +130,7 @@ function LeadForm() {
             {errors[f] && <p className="text-sm text-destructive">{errors[f]}</p>}
           </div>
         ))}
-        {errors.form && <p className="text-sm text-destructive">{errors.form}</p>}
+        {errors["form"] && <p className="text-sm text-destructive">{errors["form"]}</p>}
         <Button type="submit" size="lg" className="w-full" disabled={loading}>Solicitar acesso</Button>
       </form>
     </CardContent></Card>
