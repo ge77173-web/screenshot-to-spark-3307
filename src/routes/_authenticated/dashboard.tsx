@@ -44,7 +44,7 @@ function Dashboard() {
 
   async function updateStatus(id: string, status: string) {
     const { error } = await supabase.from("service_orders").update({ status }).eq("id", id);
-    if (error) return toast.error("Erro ao atualizar status");
+    if (error) { toast.error("Erro ao atualizar status"); return; }
     qc.invalidateQueries({ queryKey: ["orders"] });
   }
 
@@ -129,11 +129,11 @@ function OrderDialog({ order, onClose }: { order: Partial<Order>; onClose: () =>
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!f.client_name.trim() || !f.client_phone.trim() || !f.device.trim()) return toast.error("Preencha cliente, telefone e aparelho.");
+    if (!f.client_name.trim() || !f.client_phone.trim() || !f.device.trim()) { toast.error("Preencha cliente, telefone e aparelho."); return; }
     const { error } = order.id
       ? await supabase.from("service_orders").update(f).eq("id", order.id)
       : await supabase.from("service_orders").insert(f);
-    if (error) return toast.error("Erro ao salvar");
+    if (error) { toast.error("Erro ao salvar"); return; }
     qc.invalidateQueries({ queryKey: ["orders"] });
     onClose();
   }
