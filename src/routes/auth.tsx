@@ -33,7 +33,11 @@ function AuthPage() {
     if (mode === "in") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setLoading(false);
-      if (error) { toast.error("E-mail ou senha inválidos."); return; }
+      if (error) {
+        if (/confirm/i.test(error.message)) toast.error("Confirme seu e-mail pelo link que enviamos antes de entrar.");
+        else toast.error("E-mail ou senha incorretos. Ainda não tem conta? Clique em “Criar agora” abaixo.");
+        return;
+      }
       navigate({ to: "/dashboard" });
     } else {
       const { error } = await supabase.auth.signUp({
@@ -73,7 +77,7 @@ function AuthPage() {
           </form>
           <button
             type="button"
-            className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-primary"
+            className="mt-4 w-full rounded-md border py-2 text-center text-sm font-medium text-primary hover:bg-secondary"
             onClick={() => setMode(mode === "in" ? "up" : "in")}
           >
             {mode === "in" ? "Não tem conta? Criar agora" : "Já tem conta? Entrar"}

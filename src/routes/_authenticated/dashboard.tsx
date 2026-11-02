@@ -77,14 +77,14 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2 font-bold text-primary"><Wrench className="h-5 w-5" /> ReparaZap</Link>
           <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }}>
             <LogOut /> Sair
           </Button>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl space-y-8 px-6 py-8">
+      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8">
         <div className="grid gap-4 md:grid-cols-3">
           {metrics.map((m) => (
             <Card key={m.label}><CardContent className="flex items-center justify-between p-6">
@@ -101,10 +101,35 @@ function Dashboard() {
           </TabsList>
           <TabsContent value="os">
         <Card><CardContent className="p-0">
-          <div className="flex items-center justify-between p-6">
-            <h2 className="text-xl font-semibold">Ordens de Serviço</h2>
-            <Button onClick={() => setEditing({ status: "Na Fila" })}><Plus /> Nova OS</Button>
+          <div className="flex items-center justify-between gap-3 p-4 sm:p-6">
+            <h2 className="min-w-0 truncate text-lg font-semibold sm:text-xl">Ordens de Serviço</h2>
+            <Button className="shrink-0" onClick={() => setEditing({ status: "Na Fila" })}><Plus /> Nova OS</Button>
           </div>
+          <div className="space-y-3 px-4 pb-4 md:hidden">
+            {orders.length === 0 && <p className="py-8 text-center text-muted-foreground">Nenhuma OS ainda. Toque em “Nova OS”.</p>}
+            {orders.map((o) => (
+              <div key={o.id} className="space-y-3 rounded-lg border p-4">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{o.client_name}</p>
+                  <p className="text-sm text-muted-foreground">{o.client_phone} · {o.device}</p>
+                  {o.defect && <p className="mt-1 text-sm">{o.defect}</p>}
+                </div>
+                <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
+                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setEditing(o)}><Pencil /> Editar</Button>
+                  <Button asChild variant="whatsapp" size="sm">
+                    <a href={buildWhatsAppLink({ name: o.client_name, phone: o.client_phone, device: o.device, status: o.status })} target="_blank" rel="noreferrer">
+                      <MessageCircle /> WhatsApp
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden md:block">
           <Table>
             <TableHeader><TableRow>
               <TableHead>Cliente</TableHead><TableHead>Telefone</TableHead><TableHead>Aparelho</TableHead>
@@ -138,6 +163,7 @@ function Dashboard() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </CardContent></Card>
           </TabsContent>
           {isAdmin && (
