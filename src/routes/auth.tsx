@@ -33,7 +33,11 @@ function AuthPage() {
     if (mode === "in") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setLoading(false);
-      if (error) { toast.error("E-mail ou senha inválidos."); return; }
+      if (error) {
+        if (/confirm/i.test(error.message)) toast.error("Confirme seu e-mail pelo link que enviamos antes de entrar.");
+        else toast.error("E-mail ou senha incorretos. Ainda não tem conta? Clique em “Criar agora” abaixo.");
+        return;
+      }
       navigate({ to: "/dashboard" });
     } else {
       const { error } = await supabase.auth.signUp({
