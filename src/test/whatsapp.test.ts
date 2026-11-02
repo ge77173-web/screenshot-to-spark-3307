@@ -16,3 +16,11 @@ describe("whatsapp link", () => {
     );
   });
 });
+
+import { buildLeadWhatsAppLink } from "@/lib/whatsapp";
+import { test as t2, expect as e2 } from "vitest";
+t2("lead link uses sales message and clean phone", () => {
+  const url = buildLeadWhatsAppLink({ name: "Ana", phone: "(11) 98888-7777" });
+  e2(url.startsWith("https://wa.me/5511988887777?text=")).toBe(true);
+  e2(decodeURIComponent(url.split("text=")[1] ?? "")).toBe("Olá Ana, vi que você se interessou pelo ReparaZap! Vamos configurar a sua conta?");
+});

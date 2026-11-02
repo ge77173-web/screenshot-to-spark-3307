@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { CheckCircle2, ClipboardList, LogOut, MessageCircle, Pencil, Plus, Wrench } from "lucide-react";
+import { CheckCircle2, ClipboardList, Copy, Home, LogOut, MessageCircle, Pencil, Plus, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { STATUSES, buildWhatsAppLink } from "@/lib/whatsapp";
+import { STATUSES, buildWhatsAppLink, buildLeadWhatsAppLink } from "@/lib/whatsapp";
 
 type Order = Tables<"service_orders">;
 
@@ -79,9 +79,12 @@ function Dashboard() {
       <header className="border-b bg-card">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2 font-bold text-primary"><Wrench className="h-5 w-5" /> ReparaZap</Link>
+          <nav className="flex items-center gap-1">
+          <Button asChild variant="ghost" size="sm"><Link to="/"><Home /> <span className="hidden sm:inline">Página inicial</span></Link></Button>
           <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }}>
             <LogOut /> Sair
           </Button>
+          </nav>
         </div>
       </header>
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8">
@@ -118,13 +121,14 @@ function Dashboard() {
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                 </Select>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 [&>*:last-child]:col-span-2">
                   <Button variant="outline" size="sm" onClick={() => setEditing(o)}><Pencil /> Editar</Button>
                   <Button asChild variant="whatsapp" size="sm">
                     <a href={buildWhatsAppLink({ name: o.client_name, phone: o.client_phone, device: o.device, status: o.status })} target="_blank" rel="noreferrer">
                       <MessageCircle /> WhatsApp
                     </a>
                   </Button>
+<Button variant="outline" size="sm" onClick={() => copyLink(buildWhatsAppLink({ name: o.client_name, phone: o.client_phone, device: o.device, status: o.status }))}><Copy /> Copiar link</Button>
                 </div>
               </div>
             ))}
@@ -158,6 +162,7 @@ function Dashboard() {
                         <MessageCircle /> Avisar no WhatsApp
                       </a>
                     </Button>
+<Button variant="outline" size="sm" onClick={() => copyLink(buildWhatsAppLink({ name: o.client_name, phone: o.client_phone, device: o.device, status: o.status }))}><Copy /> Copiar link</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -172,18 +177,23 @@ function Dashboard() {
                 <div className="p-6"><h2 className="text-xl font-semibold">Leads</h2></div>
                 <Table>
                   <TableHeader><TableRow>
-                    <TableHead>Nome</TableHead><TableHead>Telefone</TableHead><TableHead>E-mail</TableHead><TableHead>Data</TableHead>
+                    <TableHead>Nome</TableHead><TableHead>Telefone</TableHead><TableHead>E-mail</TableHead><TableHead>Data</TableHead><TableHead className="text-right">Ações</TableHead>
                   </TableRow></TableHeader>
                   <TableBody>
                     {leads.length === 0 && (
-                      <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">Nenhum lead ainda.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="py-10 text-center text-muted-foreground">Nenhum lead ainda.</TableCell></TableRow>
                     )}
                     {leads.map((l) => (
                       <TableRow key={l.id}>
                         <TableCell className="font-medium">{l.name}</TableCell>
                         <TableCell>{l.phone}</TableCell>
                         <TableCell>{l.email}</TableCell>
-                        <TableCell>{new Date(l.created_at).toLocaleString("pt-BR")}</TableCell>
+                        <TableCell className="whitespace-nowrap">{new Date(l.created_at).toLocaleString("pt-BR")}</TableCell>
+                        <TableCell className="text-right">
+                          <Button asChild variant="whatsapp" size="sm">
+                            <a href={buildLeadWhatsAppLink(l)} target="_blank" rel="noreferrer"><MessageCircle /> Fechar Venda via WhatsApp</a>
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -195,6 +205,13 @@ function Dashboard() {
       </main>
       {editing && <OrderDialog order={editing} onClose={() => setEditing(null)} />}
     </div>
+  );
+}
+
+function copyLink(url: string) {
+  navigator.clipboard.writeText(url).then(
+    () => toast.success("Link copiado! Cole e envie para o cliente."),
+    () => toast.error("Não foi possível copiar o link."),
   );
 }
 
