@@ -25,3 +25,11 @@ export function buildWhatsAppLink(o: { name: string; phone: string; device: stri
 
 // TODO: replace with the founder's real WhatsApp number
 export const FOUNDER_WHATSAPP = "5500000000000";
+
+export function buildLeadMessage(name: string): string {
+  return `Olá ${name}, vi que você se interessou pelo ReparaZap! Vamos configurar a sua conta?`;
+}
+
+export function buildLeadWhatsAppLink(l: { name: string; phone: string }) {
+  return `https://wa.me/${normalizePhone(l.phone)}?text=${encodeURIComponent(buildLeadMessage(l.name))}`;
+}
